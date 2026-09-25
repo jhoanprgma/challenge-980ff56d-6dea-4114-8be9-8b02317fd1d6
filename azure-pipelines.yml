@@ -1,0 +1,213 @@
+trigger:
+  branches:
+    include:
+      - main
+      - develop
+  paths:
+    exclude:
+      - '*.md'
+      - 'docs/**'
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+
+variables:
+  mavenCacheFolder: $(Pipeline.Workspace)/.m2
+  dockerRegistryServiceConnection: 'azure-container-registry'
+  dockerImageName: 'prestamos-app'
+  dockerImageTag: '$(Build.BuildId)'
+  sonarOrganization: 'banca-org'
+  sonarProjectKey: 'com.banca:prestamos'
+  javaVersion: '21'
+
+stages:
+  - stage: Build
+    displayName: 'Compilar proyecto'
+    jobs:
+      - job: MavenBuild
+        displayName: 'Ejecutar Maven Build'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Cache@2
+            displayName: 'Cache de dependencias Maven'
+            inputs:
+              key: 'maven | "$(Agent.OS)" | pom.xml'
+              path: $(mavenCacheFolder)
+              cacheHitVar: 'CACHE_RESTORED'
+          - task: Maven@3
+            displayName: 'Maven build'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              mavenOptions: '-Xmx2048m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: $(javaVersion)
+              mavenAuthenticateFeed: false
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar artefacto JAR'
+            inputs:
+              targetPath: 'target/prestamos-0.0.1-SNAPSHOT.jar'
+              artifact: 'prestamos-jar'
+              publishLocation: 'pipeline'
+
+  - stage: Test
+    displayName: 'Ejecutar pruebas'
+    dependsOn: Build
+    jobs:
+      - job: MavenTest
+        displayName: 'Ejecutar pruebas unitarias y BDD'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Maven@3
+            displayName: 'Ejecutar tests'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'test'
+              mavenOptions: '-Xmx2048m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: $(javaVersion)
+              publishJUnitResults: true
+              testResultsFiles: '**/surefire-reports/*.xml'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar informes de tests'
+            inputs:
+              targetPath: 'target/surefire-reports'
+              artifact: 'test-reports'
+              publishLocation: 'pipeline'
+
+  - stage: StaticAnalysis
+    displayName: 'Análisis estático'
+    dependsOn: Test
+    jobs:
+      - job: SonarCloudAnalysis
+        displayName: 'Análisis SonarCloud'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: SonarCloudPrepare@1
+            displayName: 'Preparar SonarCloud'
+            inputs:
+              SonarCloud: 'sonar-cloud-connection'
+              organization: $(sonarOrganization)
+              scannerMode: 'Other'
+              extraProperties: |
+                sonar.projectKey=$(sonarProjectKey)
+                sonar.java.source=$(javaVersion)
+                sonar.sourceEncoding=UTF-8
+                sonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          - task: Maven@3
+            displayName: 'Ejecutar análisis Sonar'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'verify sonar:sonar'
+              mavenOptions: '-Xmx2048m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: $(javaVersion)
+          - task: SonarCloudPublish@1
+            displayName: 'Publicar resultados SonarCloud'
+            inputs:
+              pollingTimeoutSec: '300'
+
+  - stage: SecurityScan
+    displayName: 'Escaneo de seguridad'
+    dependsOn: StaticAnalysis
+    jobs:
+      - job: DependencyCheck
+        displayName: 'OWASP Dependency Check'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Maven@3
+            displayName: 'Dependency Check'
+            inputs:
+              mavenPomFile: 'pom.xml'
+              goals: 'org.owasp:dependency-check-maven:check'
+              mavenOptions: '-Xmx2048m'
+              javaHomeOption: 'JDKVersion'
+              jdkVersionOption: $(javaVersion)
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publicar informe Dependency Check'
+            inputs:
+              targetPath: 'target/dependency-check-report.html'
+              artifact: 'security-report'
+              publishLocation: 'pipeline'
+
+  - stage: BuildDocker
+    displayName: 'Construir imagen Docker'
+    dependsOn: SecurityScan
+    condition: succeeded()
+    jobs:
+      - job: DockerBuild
+        displayName: 'Build y push imagen Docker'
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: Docker@2
+            displayName: 'Login ACR'
+            inputs:
+              containerRegistry: $(dockerRegistryServiceConnection)
+              command: 'login'
+          - task: Docker@2
+            displayName: 'Build imagen'
+            inputs:
+              command: 'build'
+              dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+              tags: |
+                $(dockerImageTag)
+                latest
+              imageName: $(dockerImageName)
+          - task: Docker@2
+            displayName: 'Push imagen'
+            inputs:
+              command: 'push'
+              containerRegistry: $(dockerRegistryServiceConnection)
+              imageName: $(dockerImageName)
+              tags: |
+                $(dockerImageTag)
+                latest
+
+  - stage: Deploy
+    displayName: 'Desplegar a entorno'
+    dependsOn: BuildDocker
+    condition: succeeded()
+    jobs:
+      - deployment: DeployDev
+        displayName: 'Desplegar a Development'
+        environment: 'prestamos-dev'
+        pool:
+          vmImage: 'ubuntu-latest'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: 'Terraform init dev'
+                  inputs:
+                    azureSubscription: 'azure-service-connection'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      cd terraform/environments/dev
+                      terraform init -backend=false
+                - task: AzureCLI@2
+                  displayName: 'Terraform apply dev'
+                  inputs:
+                    azureSubscription: 'azure-service-connection'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      cd terraform/environments/dev
+                      terraform apply -auto-approve
+                - task: AzureCLI@2
+                  displayName: 'Healthcheck'
+                  inputs:
+                    azureSubscription: 'azure-service-connection'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    inlineScript: |
+                      sleep 30
+                      curl -f https://prestamos-dev.banca.com/actuator/health || exit 1
