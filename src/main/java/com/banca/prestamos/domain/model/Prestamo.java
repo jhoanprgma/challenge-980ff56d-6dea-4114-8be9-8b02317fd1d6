@@ -9,10 +9,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
-import javax.validation.constraints.DecimalMin;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 
 /**
  * Agregado raíz del dominio de préstamos.
@@ -127,6 +127,13 @@ public class Prestamo {
         this.estado = EstadoPrestamo.RECHAZADO;
         this.motivoRechazo = motivo;
         return this;
+    }
+
+    public static Prestamo reconstruir(UUID id, Solicitante solicitante, BigDecimal monto, int plazoMeses,
+            LocalDate fechaSolicitud, EstadoPrestamo estado, LocalDate fechaAprobacion,
+            BigDecimal interesTasa, String motivoRechazo) {
+        return new Prestamo(id, solicitante, monto, plazoMeses, fechaSolicitud, estado,
+                fechaAprobacion, interesTasa, motivoRechazo);
     }
 
     /**

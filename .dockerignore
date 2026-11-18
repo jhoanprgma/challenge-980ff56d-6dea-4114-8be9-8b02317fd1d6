@@ -1,0 +1,9 @@
+.git
+.gitignore
+.dockerignore
+Dockerfile
+target
+.terraform
+terraform/.terraform
+terraform/.terraform.lock.hcl
+*.md

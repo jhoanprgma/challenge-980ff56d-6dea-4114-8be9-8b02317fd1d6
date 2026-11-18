@@ -1,0 +1,6 @@
+# Maven build output
+target/
+
+# Terraform working directories and provider lock files
+.terraform/
+.terraform.lock.hcl

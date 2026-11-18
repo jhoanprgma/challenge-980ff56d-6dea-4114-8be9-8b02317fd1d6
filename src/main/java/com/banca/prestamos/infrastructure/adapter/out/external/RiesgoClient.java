@@ -2,8 +2,6 @@ package com.banca.prestamos.infrastructure.adapter.out.external;
 
 
 
-import com.banca.prestamos.domain.model.Monto;
-import com.banca.prestamos.domain.model.Solicitante;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import org.slf4j.Logger;

@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.client.RestTemplate;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -34,10 +35,10 @@ public class PrestamosApplication {
      */
     @Bean
     public RestTemplate restTemplate() {
-        RestTemplate restTemplate = new RestTemplate();
-        restTemplate.setConnectTimeout(Duration.ofMillis(1000));
-        restTemplate.setReadTimeout(Duration.ofMillis(2000));
-        return restTemplate;
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(1000);
+        requestFactory.setReadTimeout(2000);
+        return new RestTemplate(requestFactory);
     }
 
     /**

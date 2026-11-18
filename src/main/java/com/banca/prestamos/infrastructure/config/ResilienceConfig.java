@@ -23,7 +23,6 @@ public class ResilienceConfig {
                 .minimumNumberOfCalls(5)
                 .permittedNumberOfCallsInHalfOpenState(3)
                 .automaticTransitionFromOpenToHalfOpenEnabled(true)
-                .waitDurationInOpenState(Duration.ofSeconds(60))
                 .slowCallRateThreshold(100)
                 .slowCallDurationThreshold(Duration.ofSeconds(2))
                 .build();

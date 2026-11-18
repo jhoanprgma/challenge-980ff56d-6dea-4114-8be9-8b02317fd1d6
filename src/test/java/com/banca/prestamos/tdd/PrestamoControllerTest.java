@@ -1,7 +1,6 @@
 package com.banca.prestamos.tdd;
 
 
-import com.banca.prestamos.domain.model.EstadoPrestamo;
 import com.banca.prestamos.application.port.in.PrestamoUseCase;
 import com.banca.prestamos.domain.model.Prestamo;
 import com.banca.prestamos.domain.model.Solicitante;

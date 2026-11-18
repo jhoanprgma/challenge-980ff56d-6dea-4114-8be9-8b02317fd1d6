@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -74,6 +73,33 @@ public class PrestamoController {
     public ResponseEntity<PrestamoResponse> obtenerDetallesPrestamo(@PathVariable UUID id) {
         Prestamo prestamo = prestamoUseCase.obtenerDetallesPrestamo(id);
         return ResponseEntity.ok(mapToResponse(prestamo));
+    }
+
+    public ResponseEntity<Prestamo> crearSolicitud(Solicitante solicitante, BigDecimal monto,
+            int plazoMeses, LocalDate fechaSolicitud) {
+        Prestamo prestamo = prestamoUseCase.crearSolicitudPrestamo(
+                solicitante, monto, plazoMeses, fechaSolicitud);
+        return ResponseEntity.status(HttpStatus.CREATED).body(prestamo);
+    }
+
+    public ResponseEntity<Prestamo> aprobarPrestamo(String id, LocalDate fechaAprobacion,
+            BigDecimal tasaInteres) {
+        Prestamo prestamo = prestamoUseCase.aprobarPrestamo(
+                UUID.fromString(id), fechaAprobacion, tasaInteres);
+        return ResponseEntity.ok(prestamo);
+    }
+
+    public ResponseEntity<Prestamo> rechazarPrestamo(String id, String motivo) {
+        Prestamo prestamo = prestamoUseCase.rechazarPrestamo(UUID.fromString(id), motivo);
+        return ResponseEntity.ok(prestamo);
+    }
+
+    public ResponseEntity<Prestamo> obtenerPrestamo(String id) {
+        Prestamo prestamo = prestamoUseCase.obtenerDetallesPrestamo(UUID.fromString(id));
+        if (prestamo == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(prestamo);
     }
 
     private PrestamoResponse mapToResponse(Prestamo prestamo) {

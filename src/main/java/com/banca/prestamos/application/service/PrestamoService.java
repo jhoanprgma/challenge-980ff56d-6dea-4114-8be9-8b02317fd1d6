@@ -3,7 +3,7 @@ package com.banca.prestamos.application.service;
 import com.banca.prestamos.application.port.in.PrestamoUseCase;
 import com.banca.prestamos.domain.model.Prestamo;
 import com.banca.prestamos.domain.model.Solicitante;
-import com.banca.prestamos.infrastructure.adapter.out.persistence.PrestamoRepository;
+import com.banca.prestamos.application.port.out.PrestamoRepositoryPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -20,9 +19,9 @@ public class PrestamoService implements PrestamoUseCase {
 
     private static final Logger logger = LoggerFactory.getLogger(PrestamoService.class);
 
-    private final PrestamoRepository prestamoRepository;
+    private final PrestamoRepositoryPort prestamoRepository;
 
-    public PrestamoService(PrestamoRepository prestamoRepository) {
+    public PrestamoService(PrestamoRepositoryPort prestamoRepository) {
         this.prestamoRepository = prestamoRepository;
     }
 

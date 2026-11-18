@@ -2,13 +2,11 @@ package com.banca.prestamos.bdd;
 
 
 
-import com.banca.prestamos.domain.model.Monto;
-import com.banca.prestamos.domain.model.EstadoPrestamo;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.And;
-import io.cucumber.junit.platform.Cucumber;
+import io.cucumber.junit.platform.engine.Cucumber;
 import org.junit.platform.suite.api.ConfigurationParameter;
 import org.junit.platform.suite.api.ConfigurationParameters;
 import org.junit.platform.suite.api.SelectClasspathResource;

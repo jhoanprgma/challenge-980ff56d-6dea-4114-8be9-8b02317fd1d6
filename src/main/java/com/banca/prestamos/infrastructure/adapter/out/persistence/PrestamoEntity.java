@@ -1,11 +1,9 @@
 package com.banca.prestamos.infrastructure.adapter.out.persistence;
 
 
-import com.banca.prestamos.domain.model.EstadoPrestamo;
 import com.banca.prestamos.domain.model.Prestamo;
 import com.banca.prestamos.domain.model.Solicitante;
 import jakarta.persistence.*;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,7 +11,6 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "prestamos")
-@Component
 public class PrestamoEntity {
 
     @Id
@@ -218,7 +215,7 @@ public class PrestamoEntity {
     }
 
     public enum EstadoPrestamoEntity {
-        SOLICITADO,
+        PENDIENTE,
         APROBADO,
         RECHAZADO;
 

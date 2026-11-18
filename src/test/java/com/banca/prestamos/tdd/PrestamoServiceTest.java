@@ -1,7 +1,6 @@
 package com.banca.prestamos.tdd;
 
 
-import com.banca.prestamos.domain.model.EstadoPrestamo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,7 +78,7 @@ class PrestamoServiceTest {
         );
 
         assertNotNull(resultado, "El préstamo no debe ser null");
-        assertEquals(Prestamo.EstadoPrestamo.SOLICITADO, resultado.getEstado(),
+        assertEquals(Prestamo.EstadoPrestamo.PENDIENTE, resultado.getEstado(),
             "El estado debe ser SOLICITADO");
         assertEquals(new BigDecimal("50000.00"), resultado.getMonto(),
             "El monto debe coincidir");
