@@ -1,0 +1,11 @@
+Modelo de dominio:
+- Valor-objetos: 
+  - Monto
+  - Moneda
+  - TasaInteres
+
+- Entidades:
+ - Solicitante
+ - Monto
+ - Prestamo
+ - EstadoPrestamo
