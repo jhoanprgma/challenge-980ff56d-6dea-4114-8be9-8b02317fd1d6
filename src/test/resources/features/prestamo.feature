@@ -21,7 +21,7 @@ Feature: Gestión de Préstamos Personales
     And el prestamo debe estar en estado "APROBADO"
     And la tasa de interes debe ser 0.15
 
-  Scenario: Rechazo de préstamo por riesgo crediticio
+  Scenario: Rechazo manual de préstamo con motivo
     Given un solicitante con nombre "Carlos", apellido "López", documento "DNI" numero "11223344"
     When solicita un prestamo de 200000.00 pesos con plazo de 36 meses
     And el sistema rechaza el prestamo con motivo "Riesgo crediticio elevado"
@@ -29,12 +29,17 @@ Feature: Gestión de Préstamos Personales
     And el prestamo debe estar en estado "RECHAZADO"
     And el motivo de rechazo debe ser "Riesgo crediticio elevado"
 
-  Scenario: Solicitud de préstamo con monto mínimo
-    When solicita un prestamo de 1000.00 pesos con plazo de 3 meses
+  Scenario: Solicitud de préstamo con monto apenas mayor que cero
+    When solicita un prestamo de 0.01 pesos con plazo de 3 meses
     Then la solicitud debe ser exitosa
     And el prestamo debe estar en estado "SOLICITADO"
-    And el monto del prestamo debe ser 1000.00
+    And el monto del prestamo debe ser 0.01
     And el plazo del prestamo debe ser 3 meses
+
+  Scenario: Solicitud de préstamo con monto cero
+    When solicita un prestamo de 0.00 pesos con plazo de 12 meses
+    Then la solicitud debe ser rechazada
+    And el sistema reporta el error con motivo "El monto del préstamo debe ser mayor a cero"
 
   Scenario: Solicitud de préstamo con monto máximo
     When solicita un prestamo de 500000.00 pesos con plazo de 60 meses
@@ -43,11 +48,18 @@ Feature: Gestión de Préstamos Personales
     And el monto del prestamo debe ser 500000.00
     And el plazo del prestamo debe ser 60 meses
 
-  Scenario: Múltiples solicitudes del mismo solicitante
+  Scenario: Se rechaza un monto mayor que el máximo permitido
+    When solicita un prestamo de 500000.01 pesos con plazo de 60 meses
+    Then la solicitud debe ser rechazada
+    And el sistema reporta el error con motivo "El monto máximo permitido es 500,000"
+
+  Scenario: Múltiples solicitudes del mismo solicitante generan préstamos distintos
     Given un solicitante con nombre "Ana", apellido "Martínez", documento "PASAPORTE" numero "AA123456"
     When solicita un prestamo de 30000.00 pesos con plazo de 6 meses
     Then la solicitud debe ser exitosa
     And el prestamo debe estar en estado "SOLICITADO"
+    And se guarda el identificador del prestamo actual
     When solicita un prestamo de 25000.00 pesos con plazo de 6 meses
     Then la solicitud debe ser exitosa
-    And el prestamo debe tener un identificador unico
+    And el prestamo debe estar en estado "SOLICITADO"
+    And el identificador del prestamo actual debe ser diferente al guardado

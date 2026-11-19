@@ -28,7 +28,7 @@ import com.banca.prestamos.domain.model.Solicitante;
     @ConfigurationParameter(key = "plugin", value = "pretty"),
     @ConfigurationParameter(key = "glue", value = "com.banca.prestamos.bdd")
 })
-@Disabled("Superficie de práctica - implementar los steps según los escenarios BDD")
+//@Disabled("Superficie de práctica - implementar los steps según los escenarios BDD")
 public class PrestamoSteps {
 
     private PrestamoUseCase prestamoUseCase;
